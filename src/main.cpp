@@ -18,6 +18,8 @@ void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *valu
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table);
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table);
 
+std::vector<int> pid_list;
+
 int main(int argc, char **argv)
 {
     // Ensure user specified page size as a command line parameter
@@ -68,27 +70,33 @@ int main(int argc, char **argv)
         */
 
         // Handle command
-        if(strncmp(cmd,"create xxxx xxx", 6) == 0){ //if first 6 digits match to 'create'
-            printf("entered the CRE8 func call \n \n");
+        if(strncmp(cmd,"create", 6) == 0){ //if first 6 digits match to 'create'
+            printf("entered the CRE8 func call\n");
+
+            int text_size= std::stoi(tokens[1]); 
+            int data_size = std::stoi(tokens[2]);
+            
+            //printf("ts: %d, ds: %d\n", text_size, data_size); //test tokens cast to ints
+            createProcess(text_size, data_size, mmu, page_table);
         }
         
-        else if(strncmp(cmd,"allocate xxxx xxx", 8) == 0){
-            printf("entered the ALLOC8 func call \n \n");
+        else if(strncmp(cmd,"allocate", 8) == 0){
+            printf("entered the ALLOC8 func call\n");
         }
-        else if(strncmp(cmd,"set xxxx xxx", 3) == 0){
-            printf("entered the SET func call \n \n");
+        else if(strncmp(cmd,"set", 3) == 0){
+            printf("entered the SET func call\n");
         }
-        else if(strncmp(cmd,"print xxxx xxx", 5) == 0){
-            printf("entered the PRINT func call \n \n");
+        else if(strncmp(cmd,"print", 5) == 0){
+            printf("entered the PRINT func call\n");
         }
-        else if(strncmp(cmd,"free xxxx xxx", 4) == 0){
-            printf("entered the FREE func call \n \n");
+        else if(strncmp(cmd,"free", 4) == 0){
+            printf("entered the FREE func call\n");
         }
-        else if(strncmp(cmd,"terminate xxxx xxx", 9) == 0){
-            printf("entered the TERMIN8 func call \n \n");
+        else if(strncmp(cmd,"terminate", 9) == 0){
+            printf("entered the TERMIN8 func call\n");
         }
         else{ //else, unrecognized command. ERROR.
-            printf("error: command not recognized.\n");
+            printf("error: command not recognized\n");
         }
         
         // Get next command
@@ -124,15 +132,20 @@ void printStartMessage(int page_size)
     std::cout << std::endl;
 }
 
+//no error check needed in createProcess
 void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table)
 {
-    // TODO: implement this!
     //   1- create new process in the MMU
-    mmu->createProcess();
+    uint32_t pid = mmu->createProcess(); //create process and save pid
+    pid_list.push_back(pid);    //add pid to list
+
     //   2- allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
+    allocateVariable(pid, "<TEXT>", DataType::Char, text_size, mmu, page_table);
+    allocateVariable(pid, "<GLOBALS>", DataType::Char, data_size, mmu, page_table);
+    allocateVariable(pid, "<STACK>", DataType::Char, 65536, mmu, page_table); //65536 is bytes size for this project
 
     //   3- print pid
-
+    printf("%d\n",pid);
 }
 
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
