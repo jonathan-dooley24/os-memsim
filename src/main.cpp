@@ -35,14 +35,39 @@ int main(int argc, char **argv)
     Mmu *mmu = new Mmu(mem_size);
     PageTable *page_table = new PageTable(page_size);
 
-    // Prompt loop
     std::string command;
     std::cout << "> ";
     std::getline (std::cin, command);
+    // Prompt loop
     while (command != "exit") {
+        //set command to a char* for using strncmp
+        char command_arr[command.length() + 1];
+        strcpy(command_arr, command.c_str());
+
         // Handle command
-        // TODO: implement this!
-        if()
+        if(strncmp(command_arr,"create xxxx xxx", 6) == 0){ //if first 6 digits match to 'create'
+            printf("entered the CREATE func call \n \n");
+        }
+        else if(strncmp(command_arr,"allocate xxxx xxx", 8) == 0){
+            printf("entered the ALLOC8 func call \n \n");
+        }
+        else if(strncmp(command_arr,"set xxxx xxx", 3) == 0){
+            printf("entered the SET func call \n \n");
+        }
+        else if(strncmp(command_arr,"print xxxx xxx", 5) == 0){
+            printf("entered the PRINT func call \n \n");
+        }
+        else if(strncmp(command_arr,"free xxxx xxx", 4) == 0){
+            printf("entered the FREE func call \n \n");
+        }
+        else if(strncmp(command_arr,"terminate xxxx xxx", 9) == 0){
+            printf("entered the TERMIN8 func call \n \n");
+        }
+        else{ //else, unrecognized command. ERROR.
+            printf("error: command not recognized.\n");
+        }
+        
+        
         // Get next command
         std::cout << "> ";
         std::getline (std::cin, command);
