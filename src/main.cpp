@@ -5,6 +5,10 @@
 #include "pagetable.h"
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+#include <vector>
+#include <sstream>
+#include <iterator>
 
 
 void printStartMessage(int page_size);
@@ -35,42 +39,64 @@ int main(int argc, char **argv)
     Mmu *mmu = new Mmu(mem_size);
     PageTable *page_table = new PageTable(page_size);
 
+    // Prompt loop
     std::string command;
     std::cout << "> ";
     std::getline (std::cin, command);
-    // Prompt loop
+
     while (command != "exit") {
         //set command to a char* for using strncmp
-        char command_arr[command.length() + 1];
-        strcpy(command_arr, command.c_str());
+        /*
+        char cmd[command.length() + 1];
+        strcpy(cmd, command.c_str());   
+        */
+
+        //tokenize the string
+        std::istringstream buffer(command);
+        std::istream_iterator<std::string> beg(buffer), end;
+        std::vector<std::string> tokens(beg,end);
+
+        //set first token to a char*, called 'cmd', for using strncmp
+        char cmd[tokens[0].length()];
+        strcpy(cmd, tokens[0].c_str());
+
+        /*
+        // use this for displaying  input line tokens
+        for(std::string st : tokens){
+            std::cout << st << ' ';
+        }
+        */
 
         // Handle command
-        if(strncmp(command_arr,"create xxxx xxx", 6) == 0){ //if first 6 digits match to 'create'
-            printf("entered the CREATE func call \n \n");
+        if(strncmp(cmd,"create xxxx xxx", 6) == 0){ //if first 6 digits match to 'create'
+            printf("entered the CRE8 func call \n \n");
         }
-        else if(strncmp(command_arr,"allocate xxxx xxx", 8) == 0){
+        
+        else if(strncmp(cmd,"allocate xxxx xxx", 8) == 0){
             printf("entered the ALLOC8 func call \n \n");
         }
-        else if(strncmp(command_arr,"set xxxx xxx", 3) == 0){
+        else if(strncmp(cmd,"set xxxx xxx", 3) == 0){
             printf("entered the SET func call \n \n");
         }
-        else if(strncmp(command_arr,"print xxxx xxx", 5) == 0){
+        else if(strncmp(cmd,"print xxxx xxx", 5) == 0){
             printf("entered the PRINT func call \n \n");
         }
-        else if(strncmp(command_arr,"free xxxx xxx", 4) == 0){
+        else if(strncmp(cmd,"free xxxx xxx", 4) == 0){
             printf("entered the FREE func call \n \n");
         }
-        else if(strncmp(command_arr,"terminate xxxx xxx", 9) == 0){
+        else if(strncmp(cmd,"terminate xxxx xxx", 9) == 0){
             printf("entered the TERMIN8 func call \n \n");
         }
         else{ //else, unrecognized command. ERROR.
             printf("error: command not recognized.\n");
         }
         
-        
         // Get next command
         std::cout << "> ";
         std::getline (std::cin, command);
+        
+        //printf("\n %s \n",command);
+
     }
 
     // Clean up
