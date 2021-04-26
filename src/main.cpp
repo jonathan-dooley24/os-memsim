@@ -3,6 +3,9 @@
 #include <cstring>
 #include "mmu.h"
 #include "pagetable.h"
+#include <stdio.h>
+#include <string.h>
+
 
 void printStartMessage(int page_size);
 void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table);
@@ -39,13 +42,13 @@ int main(int argc, char **argv)
     while (command != "exit") {
         // Handle command
         // TODO: implement this!
-
+        if()
         // Get next command
         std::cout << "> ";
         std::getline (std::cin, command);
     }
 
-    // Cean up
+    // Clean up
     free(memory);
     delete mmu;
     delete page_table;
@@ -73,9 +76,12 @@ void printStartMessage(int page_size)
 void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table)
 {
     // TODO: implement this!
-    //   - create new process in the MMU
-    //   - allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
-    //   - print pid
+    //   1- create new process in the MMU
+    mmu->createProcess();
+    //   2- allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
+
+    //   3- print pid
+
 }
 
 void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
