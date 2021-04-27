@@ -101,9 +101,20 @@ int main(int argc, char **argv)
             if(tokens[1] == "mmu"){
                 mmu->print();
             }
+            else if(tokens[1] == "page"){
+                page_table->print();
+            }
         }
         else if(strncmp(cmd,"free", 4) == 0){
             printf("entered the FREE func call\n");
+            //get pid and var_name
+            int pid = std::stoi(tokens[1]);
+            std::string var_name = tokens[2];
+            
+            //ERROR CHECK here for process not exists AND for variable not exists
+
+            freeVariable(pid, var_name, mmu, page_table);
+
         }
         else if(strncmp(cmd,"terminate", 9) == 0){
             printf("entered the TERMIN8 func call\n");
