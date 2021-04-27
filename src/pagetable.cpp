@@ -30,8 +30,21 @@ void PageTable::addEntry(uint32_t pid, int page_number)
     std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
 
     int frame = 0; 
+
     // Find free frame
     // TODO: implement this!
+    if(_table.count(entry) == 0){ //if the entry is not already present in the table
+        
+        std::vector<std::string> keys = sortedKeys();
+        bool spot_found = true;
+
+        while(true){
+            
+
+        }
+
+    }
+ 
     _table[entry] = frame;
 }
 
@@ -66,6 +79,17 @@ void PageTable::print()
 
     for (i = 0; i < keys.size(); i++)
     {
-        // TODO: print all pages
+        // TODO: print all pages.
+        //the position of "|" in the key can be found using: keys[i].find("|")
+        //get pid. AKA keys[i] from beginning to "|"
+        std::string pid = keys[i].substr(0, keys[i].find("|"));
+        //get page num. AKA keys[i] from "|" to end
+        std::string page_number = keys[i].substr(keys[i].find("|") + 1);
+        //get frame num
+        int frame_number = _table[keys[i]];
+
+        //print
+        printf(" %4s | %11s | %12d \n", pid.c_str(), page_number.c_str(), frame_number);
+
     }
 }

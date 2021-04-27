@@ -18,6 +18,8 @@ void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *valu
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table);
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table);
 
+DataType convertStringToDatatype(std::string input);
+
 std::vector<int> pid_list;
 
 int main(int argc, char **argv)
@@ -73,21 +75,32 @@ int main(int argc, char **argv)
         if(strncmp(cmd,"create", 6) == 0){ //if first 6 digits match to 'create'
             printf("entered the CRE8 func call\n");
 
-            int text_size= std::stoi(tokens[1]); 
+            //get text and data sizes
+            int text_size = std::stoi(tokens[1]); 
             int data_size = std::stoi(tokens[2]);
             
             //printf("ts: %d, ds: %d\n", text_size, data_size); //test tokens cast to ints
             createProcess(text_size, data_size, mmu, page_table);
         }
-        
         else if(strncmp(cmd,"allocate", 8) == 0){
             printf("entered the ALLOC8 func call\n");
+
+            int pid = std::stoi(tokens[1]);
+            std::string var_name = tokens[2];
+            DataType type = convertStringToDatatype(tokens[3]);
+            int num_elements = std::stoi(tokens[4]);
+            //error check then call allocateVariable
+            if(pid)
+            allocateVariable(pid, var_name, type, num_elements, mmu, page_table);
         }
         else if(strncmp(cmd,"set", 3) == 0){
             printf("entered the SET func call\n");
         }
         else if(strncmp(cmd,"print", 5) == 0){
             printf("entered the PRINT func call\n");
+            if(tokens[1] == "mmu"){
+                mmu->print();
+            }
         }
         else if(strncmp(cmd,"free", 4) == 0){
             printf("entered the FREE func call\n");
@@ -142,7 +155,7 @@ void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table
     //   2- allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
     allocateVariable(pid, "<TEXT>", DataType::Char, text_size, mmu, page_table);
     allocateVariable(pid, "<GLOBALS>", DataType::Char, data_size, mmu, page_table);
-    allocateVariable(pid, "<STACK>", DataType::Char, 65536, mmu, page_table); //65536 is bytes size for this project
+    allocateVariable(pid, "<STACK>", DataType::Char, 65536, mmu, page_table); 
 
     //   3- print pid
     printf("%d\n",pid);
@@ -178,4 +191,30 @@ void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)
     // TODO: implement this!
     //   - remove process from MMU
     //   - free all pages associated with given process
+}
+
+DataType convertStringToDatatype(std::string input){
+    DataType type;
+    if(input == "char"){
+        type = Char;
+    }
+    else if(input == "short"){
+        type = Short;
+    }
+    else if(input == "int"){
+        type = Int;
+    }
+    else if(input == "float"){
+        type = Float;
+    }
+    else if(input == "long"){
+        type = Long;
+    }
+    else if(input == "double"){
+        type = Double;
+    }
+    else{
+        //if this is hit, invalid request
+    }
+    return type;
 }
