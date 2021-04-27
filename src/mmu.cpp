@@ -74,3 +74,68 @@ void Mmu::print()
         }
     }
 }
+
+
+void Mmu::mergeFreeSpace(uint32_t pid, Variable* var){
+    Process *proc = getProc(pid);
+    Variable *var_before = NULL;
+    Variable *var_after = NULL;
+    int before_index, after_index;
+
+    for(int i = 0; i < proc->variables.size(); i++){
+        if(proc->variables[i]->virtual_address == var->virtual_address){
+            //store the variables before and after for potential merging
+            if(i > 0){ //if there is a var before input var
+                var_before = proc->variables[i-1];
+                int before_index = i-1;
+            }
+            if(i < proc->variables.size()-1){
+                var_after = proc->variables[i+1];
+                int after_index = i+1;
+            }
+        }    
+    }
+    
+    //merge, if necessary
+    if(var_before != NULL && var_before->type == FreeSpace){
+        //size is now size of var plus the free space before it
+        var->size += var_before->size;
+        //var must now begin where var_before began
+        var->virtual_address = var_before->virtual_address;
+        //erase var_before. it is part of var now
+        proc->variables.erase(proc->variables.begin() + before_index); 
+    }
+    if(var_after != NULL && var_after->type == FreeSpace){ //if free space after
+        //size is now size of var plus the free space after it
+        var->size += var_after->size;
+        //erase var_after. it is part of var now
+        proc->variables.erase(proc->variables.begin() + after_index);
+    }
+    
+}   
+
+
+Process* Mmu::getProc(uint32_t pid){
+    for(int i = 0; i < _processes.size(); i++){
+        if(_processes[i]->pid == pid){ //process (pid) found!
+            return _processes[i];
+        }
+    }
+    //this should not execute. only if input pid is bad.
+    printf("error: getProc() in mmu.cpp FAILED!");
+    exit(-1);
+}
+
+Variable* Mmu::getVar(uint32_t pid, std::string var_name){
+    Process *proc = getProc(pid);
+
+    for(int i =0; i < proc->variables.size(); i++){
+        if(proc->variables[i]->name == var_name){ //variable found!
+            return proc->variables[i];
+        }
+    }
+    //this should not execute. only if input pid or var_name is bad.
+    printf("error: getVar() in mmu.cpp FAILED!");
+    exit(-1);
+}
+

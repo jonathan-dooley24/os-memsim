@@ -195,6 +195,13 @@ void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_
     // TODO: implement this!
     //   - remove entry from MMU
     //   - free page if this variable was the only one on a given page
+
+    // Change the variable name and type to represent free space
+    Variable *var = mmu->getVar(pid, var_name);
+    var->name = "<FREE_SPACE>";
+    var->type = FreeSpace;
+    // Check if either the variable just before it and/or just after it are also free space - if so merge them into one larger free space
+    mmu->mergeFreeSpace(pid, var);
 }
 
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table)
