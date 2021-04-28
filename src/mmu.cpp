@@ -113,7 +113,18 @@ void Mmu::mergeFreeSpace(uint32_t pid, Variable* var){
     }
     
 }   
-
+std::vector<Variable*> Mmu::getVarList(uint32_t pid) {
+    int i;
+    Process *proc = getProc(pid);
+    for (i = 0; i < _processes.size(); i++)
+    {
+        if (_processes[i]->pid == pid)
+        {
+            proc = _processes[i];
+        }
+    }
+    return proc->variables;
+}
 
 Process* Mmu::getProc(uint32_t pid){
     for(int i = 0; i < _processes.size(); i++){

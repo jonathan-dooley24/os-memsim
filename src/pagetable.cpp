@@ -37,7 +37,7 @@ void PageTable::addEntry(uint32_t pid, int page_number)
         
         std::vector<std::string> keys = sortedKeys();
         bool spot_found = true;
-
+        
         while(true){
             
 
@@ -50,19 +50,17 @@ void PageTable::addEntry(uint32_t pid, int page_number)
 
 int PageTable::getPhysicalAddress(uint32_t pid, uint32_t virtual_address)
 {
-    // Convert virtual address to page_number and page_offset
-    // TODO: implement this!
-    int page_number = 0;
-    int page_offset = 0;
+    // Convert virtual address to page_number and page_offset. (like in class)
+    int page_number = virtual_address / _page_size;
+    int page_offset = virtual_address % _page_size;
 
     // Combination of pid and page number act as the key to look up frame number
     std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
     
     // If entry exists, look up frame number and convert virtual to physical address
     int address = -1;
-    if (_table.count(entry) > 0)
-    {
-        // TODO: implement this!
+    if (_table.count(entry) > 0){ //if it exists in table
+        address = _table[entry] * _page_size + page_offset;
     }
 
     return address;
@@ -87,9 +85,11 @@ void PageTable::print()
         std::string page_number = keys[i].substr(keys[i].find("|") + 1);
         //get frame num
         int frame_number = _table[keys[i]];
-
         //print
         printf(" %4s | %11s | %12d \n", pid.c_str(), page_number.c_str(), frame_number);
-
     }
+}
+
+int PageTable::getPageSize(){
+    return _page_size;
 }

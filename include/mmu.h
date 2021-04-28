@@ -34,9 +34,9 @@ public:
     void print();
 
     void mergeFreeSpace(uint32_t pid, Variable* var);
-    Process* Mmu::getProc(uint32_t pid);
-    Variable* Mmu::getVar(uint32_t pid, std::string var_name);
-
+    Process* getProc(uint32_t pid);
+    Variable* getVar(uint32_t pid, std::string var_name);
+    std::vector<Variable*> getVarList(uint32_t pid);
 };
 
 #endif // __MMU_H_
