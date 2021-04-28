@@ -61,7 +61,7 @@ int main(int argc, char **argv)
         std::vector<std::string> tokens(beg,end);
 
         //set first token to a char*, called 'cmd', for using strncmp
-        char cmd[tokens[0].length()];
+        char cmd[tokens[0].length()+1];
         strcpy(cmd, tokens[0].c_str());
 
         /*
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 
         // Handle command
         if(strncmp(cmd,"create", 6) == 0){ //if first 6 digits match to 'create'
-            printf("entered the CRE8 func call\n");
+            //printf("entered the CRE8 func call\n");
 
             //get text and data sizes
             int text_size = std::stoi(tokens[1]); 
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
             
         }
         else if(strncmp(cmd,"allocate", 8) == 0){
-            printf("entered the ALLOC8 func call\n");
+            //printf("entered the ALLOC8 func call\n");
 
             int pid = std::stoi(tokens[1]);
             std::string var_name = tokens[2];
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
             printf("entered the SET func call\n");
         }
         else if(strncmp(cmd,"print", 5) == 0){
-            printf("entered the PRINT func call\n");
+            //printf("entered the PRINT func call\n");
             if(tokens[1] == "mmu"){
                 mmu->print();
             }
@@ -107,15 +107,19 @@ int main(int argc, char **argv)
             }
         }
         else if(strncmp(cmd,"free", 4) == 0){
-            printf("entered the FREE func call\n");
+            //printf("entered the FREE func call\n");
             //get pid and var_name
-            int pid = std::stoi(tokens[1]);
-            std::string var_name = tokens[2];
-            
+            //printf("flag\n");
+            int pid = std::stoi(tokens[1].c_str());
+            printf("/n pid = %d \n", pid);
+            //printf("flag2\n");
+            std::string var_name = (std::string)tokens[2];
+            printf("/n var_name = %s \n", var_name.c_str());
+            //printf("flag3\n");
             //ERROR CHECK here for process not exists AND for variable not exists
 
             freeVariable(pid, var_name, mmu, page_table);
-
+            
         }
         else if(strncmp(cmd,"terminate", 9) == 0){
             printf("entered the TERMIN8 func call\n");
@@ -213,13 +217,21 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     if(var_to_replace->size > total_size){
         uint32_t leftover_free_space = var_to_replace->size - total_size;
         uint32_t new_address_for_free_space = var_to_replace->virtual_address + total_size;
-        mmu->addVariableToProcess(pid, "<FREE_SPACE", FreeSpace, leftover_free_space, new_address_for_free_space);
+        mmu->addVariableToProcess(pid, "<FREE_SPACE>", FreeSpace, leftover_free_space, new_address_for_free_space);
     }
     var_to_replace->size = total_size;
-    //keep in mind: address for var takes old address of start of freespace (AKA var_to_replace)
+    //keep in mind: address for var takes address of start of freespace (AKA var_to_replace)
 
     //   - print virtual memory address 
     printf("%d\n", var_to_replace->virtual_address);
+    /*
+     how can we NOT have address print out for createVariable() calls of allocateVariable()?
+
+     ---could duplicate function and have no print at end
+     OR 
+     ---could add a parameter that signals if a print is necessary and exclude
+        createVariable() calls to allocateVariable().
+    */
 }
 
 void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *value, Mmu *mmu, PageTable *page_table, void *memory)
@@ -231,15 +243,20 @@ void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *valu
     //           multiple elements of an array) 
 }
 
-//almost done w freeVariable
+//almost done w freeVariable. 
+/*
+weird issue. can free variables created
+*/
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table)
 {
     //   - remove entry from MMU
     // Change the variable name and type to represent free space
+    printf("flag");
     Variable *var = mmu->getVar(pid, var_name);
-    var->name = "<FREE_SPACE>";
+    var->name = (std::string)"<FREE_SPACE>";
     var->type = FreeSpace;
     // Check if either the variable just before it and/or just after it are also free space - if so merge them into one larger free space
+    printf("flag2");
     mmu->mergeFreeSpace(pid, var);
 
 
@@ -275,6 +292,7 @@ DataType convertStringToDatatype(std::string input){
     }
     else{
         //if this is hit, invalid request
+        printf("failure in convertStringToDataType() in main.cpp\n");
     }
     return type;
 }
