@@ -58,11 +58,6 @@ void Mmu::print()
     std::cout << " PID  | Variable Name | Virtual Addr | Size" << std::endl;
     std::cout << "------+---------------+--------------+------------" << std::endl;
 
-    /* use for format checking on print
-    printf(" %4u | %-13s | 0x%08X   | %10u \n", 1024, "temperature", 0,  300);
-    printf(" %4u | %-13s | 0x%08X   | %10u \n", 1024, "test", 76,  1);
-    */
-
     for (i = 0; i < _processes.size(); i++)
     {
         for (j = 0; j < _processes[i]->variables.size(); j++)
@@ -74,7 +69,6 @@ void Mmu::print()
         }
     }
 }
-
 
 void Mmu::mergeFreeSpace(uint32_t pid, Variable* var){
     Process *proc = getProc(pid);
@@ -94,8 +88,7 @@ void Mmu::mergeFreeSpace(uint32_t pid, Variable* var){
                 int after_index = i+1;
             }
         }    
-    }
-    
+    } 
     //merge, if necessary
     if(var_before != NULL && var_before->type == FreeSpace){
         //size is now size of var plus the free space before it
@@ -150,3 +143,22 @@ Variable* Mmu::getVar(uint32_t pid, std::string var_name){
     exit(-1);
 }
 
+bool Mmu::procExists(uint32_t pid){
+    for(int i = 0; i < _processes.size(); i++){
+        if(_processes[i]->pid == pid){ //process (pid) found!
+            return true;
+        }
+    }
+    return false; //not found
+}
+bool Mmu::varExists(uint32_t pid, std::string var_name){
+    if(procExists(pid)){
+        Process *proc = getProc(pid);
+        for(int i = 0; i < proc->variables.size(); i++){
+            if(proc->variables[i]->name == var_name){ //variable found!
+                return true;
+            }
+        }
+    }
+    return false;
+}

@@ -37,6 +37,7 @@ public:
     int getPhysicalAddress(uint32_t pid, uint32_t virtual_address);
     void print();
 
+    void printProcs();
     int getPageSize();
     int getNextPageIndex(uint32_t pid);
 };

@@ -37,6 +37,8 @@ public:
     Process* getProc(uint32_t pid);
     Variable* getVar(uint32_t pid, std::string var_name);
     std::vector<Variable*> getVarList(uint32_t pid);
+    bool procExists(uint32_t pid);
+    bool varExists(uint32_t pid, std::string var_name);
 };
 
 #endif // __MMU_H_
