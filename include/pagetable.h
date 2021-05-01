@@ -38,6 +38,7 @@ public:
     void print();
 
     int getPageSize();
+    int getNextPageIndex(uint32_t pid);
 };
 
 #endif // __PAGETABLE_H_

@@ -29,22 +29,24 @@ void PageTable::addEntry(uint32_t pid, int page_number)
     // Combination of pid and page number act as the key to look up frame number
     std::string entry = std::to_string(pid) + "|" + std::to_string(page_number);
 
-    int frame = 0; 
+    std::vector<std::string> keys = sortedKeys();
+    int frame = 0;
+    bool frames[keys.size()];
 
     // Find free frame
-    // TODO: implement this!
-    if(_table.count(entry) == 0){ //if the entry is not already present in the table
-        
-        std::vector<std::string> keys = sortedKeys();
-        bool spot_found = true;
-        
-        while(true){
-            
-
-        }
-
+    std::map<std::string, int>::iterator it;
+    for (it = _table.begin(); it != _table.end(); it++)
+    {
+        frames[it->second] = true;
     }
- 
+    frame = keys.size();
+    for(int i = 0; i < keys.size(); i++) 
+    {
+        if(!frames[i]){
+            frame = i;
+            break;
+        }
+    }
     _table[entry] = frame;
 }
 
@@ -92,4 +94,14 @@ void PageTable::print()
 
 int PageTable::getPageSize(){
     return _page_size;
+}
+
+int PageTable::getNextPageIndex(uint32_t pid){
+    int i = 0;
+    std::string temp_entry = std::to_string(pid) + "|" + std::to_string(i);
+    while(_table.count(temp_entry) > 0){
+        i++;
+        temp_entry = std::to_string(pid) + "|" + std::to_string(i);
+    }
+    return i;
 }

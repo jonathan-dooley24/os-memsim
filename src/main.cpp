@@ -10,17 +10,15 @@
 #include <sstream>
 #include <iterator>
 
-
 void printStartMessage(int page_size);
 void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table);
-void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table);
+void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table, bool printBool);
 void setVariable(uint32_t pid, std::string var_name, uint32_t offset, void *value, Mmu *mmu, PageTable *page_table, void *memory);
 void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_table);
 void terminateProcess(uint32_t pid, Mmu *mmu, PageTable *page_table);
 
 DataType convertStringToDatatype(std::string input);
-
-std::vector<int> pid_list;
+uint32_t findOffset(uint32_t address, uint32_t element_size, uint32_t num_elements, uint32_t page_size);
 
 int main(int argc, char **argv)
 {
@@ -78,10 +76,10 @@ int main(int argc, char **argv)
             //get text and data sizes
             int text_size = std::stoi(tokens[1]); 
             int data_size = std::stoi(tokens[2]);
-            
+
             //printf("ts: %d, ds: %d\n", text_size, data_size); //test tokens cast to ints
             createProcess(text_size, data_size, mmu, page_table);
-            
+            //printf("flagg");
         }
         else if(strncmp(cmd,"allocate", 8) == 0){
             //printf("entered the ALLOC8 func call\n");
@@ -92,7 +90,7 @@ int main(int argc, char **argv)
             int num_elements = std::stoi(tokens[4]);
             //error check then call allocateVariable
             //if(pid);
-            allocateVariable(pid, var_name, type, num_elements, mmu, page_table);
+            allocateVariable(pid, var_name, type, num_elements, mmu, page_table, true);
         }
         else if(strncmp(cmd,"set", 3) == 0){
             printf("entered the SET func call\n");
@@ -110,16 +108,16 @@ int main(int argc, char **argv)
             //printf("entered the FREE func call\n");
             //get pid and var_name
             //printf("flag\n");
-            int pid = std::stoi(tokens[1].c_str());
-            printf("/n pid = %d \n", pid);
+            uint32_t pid = std::stoi(tokens[1]);
+            printf("pid = %d \n", pid);
             //printf("flag2\n");
-            std::string var_name = (std::string)tokens[2];
-            printf("/n var_name = %s \n", var_name.c_str());
-            //printf("flag3\n");
+            std::string var_name = tokens[2];
+            printf("var_name = %s \n", var_name.c_str());
+            printf("flag3\n");
             //ERROR CHECK here for process not exists AND for variable not exists
-
+            mmu->getProc(pid);
+            printf("flag3\n");
             freeVariable(pid, var_name, mmu, page_table);
-            
         }
         else if(strncmp(cmd,"terminate", 9) == 0){
             printf("entered the TERMIN8 func call\n");
@@ -164,19 +162,20 @@ void printStartMessage(int page_size)
 void createProcess(int text_size, int data_size, Mmu *mmu, PageTable *page_table)
 {
     //   1- create new process in the MMU
+    //printf("flg");
     uint32_t pid = mmu->createProcess(); //create process and save pid
-    pid_list.push_back(pid);    //add pid to list
+    //printf("flg");
 
     //   2- allocate new variables for the <TEXT>, <GLOBALS>, and <STACK>
-    allocateVariable(pid, "<TEXT>", DataType::Char, text_size, mmu, page_table);
-    allocateVariable(pid, "<GLOBALS>", DataType::Char, data_size, mmu, page_table);
-    allocateVariable(pid, "<STACK>", DataType::Char, 65536, mmu, page_table); 
+    allocateVariable(pid, "<TEXT>", DataType::Char, text_size, mmu, page_table, false);
+    allocateVariable(pid, "<GLOBALS>", DataType::Char, data_size, mmu, page_table, false);
+    allocateVariable(pid, "<STACK>", DataType::Char, 65536, mmu, page_table, false); 
 
     //   3- print pid
     printf("%d\n",pid);
 }
 
-void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table)
+void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_t num_elements, Mmu *mmu, PageTable *page_table, bool printBool)
 {
     //   - find first free space within a page already allocated to this process that is large enough to fit the new variable
     // find total size to be allocated
@@ -195,35 +194,64 @@ void allocateVariable(uint32_t pid, std::string var_name, DataType type, uint32_
     }
     uint32_t total_size = element_size * num_elements;
     //find free space in MMU. 
-    std::vector<Variable*> var_list = mmu->getProc(pid)->variables; //get var_list for this PID
+    //std::vector<Variable*> var_list = mmu->getProc(pid)->variables; //get var_list for this PID
+    /*std::vector<Variable*> var_list;
+    for(int i = 0; i < mmu->getProc(pid)->variables.size(); i++){ //for each variable in proc
+        var_list.push_back(mmu->getProc(pid)->variables[i]);
+    }*/
+    Process* proc = mmu->getProc(pid);
+    
     uint32_t index_in_var_list = -1;
-    for(int i = 0; i < var_list.size(); i++){ //loop through var_list
-        if((var_list[i]->type == FreeSpace) && var_list[i]->size >= total_size){ //if valid spot to allocate
+    for(int i = 0; i < proc->variables.size(); i++){ //loop through var_list
+        if((proc->variables[i]->type == FreeSpace) && proc->variables[i]->size >= total_size){ //if valid spot to allocate
             index_in_var_list = i;
             break; //break here since FIRST spot is selected
         }
     }
     if(index_in_var_list == -1){ //no spot found
-    //allocate new page(s) here?
         printf("error. no open space in process '%d' with enough memory\n", pid);
         //exit(-1) //exit program
-        return;
+        exit(-1);
     }
-    //   - insert variable into MMU. put var in freespace
-    Variable* var_to_replace = var_list[index_in_var_list]; //this is the free space
-    var_to_replace->name = var_name;
-    var_to_replace->type = type;
+
+    Variable* var_to_replace = proc->variables[index_in_var_list]; //this is the free space
+    
+    //adjust page table accordingly
+    int page_size = page_table->getPageSize();
+    int page_start = page_table->getNextPageIndex(pid);
+    int page_index = page_start; //this starts at the 'start_page' for allocation
+    int memory_allocated = page_index * page_size;
+    int offset = findOffset(var_to_replace->virtual_address, element_size, num_elements, page_size);
+
+    while(var_to_replace->virtual_address + offset + total_size > memory_allocated){
+        //printf("y");
+        page_table->addEntry(pid, page_index);
+        memory_allocated += page_size;
+        page_index++; //in case there is multiple pages to be allocated.
+    }
+    if(offset > 0){ //needed to shift, so a freespace needed beforehand.
+        mmu->addVariableToProcess(pid, "<FREE_SPACE>", FreeSpace, offset, var_to_replace->virtual_address);
+    }
+    
     //if free space > space needed for var, add new freespace variable in mmu for leftovers
     if(var_to_replace->size > total_size){
         uint32_t leftover_free_space = var_to_replace->size - total_size;
         uint32_t new_address_for_free_space = var_to_replace->virtual_address + total_size;
+
         mmu->addVariableToProcess(pid, "<FREE_SPACE>", FreeSpace, leftover_free_space, new_address_for_free_space);
     }
+
+    //   - insert variable into MMU
+    var_to_replace->name = var_name;
+    var_to_replace->type = type;
     var_to_replace->size = total_size;
-    //keep in mind: address for var takes address of start of freespace (AKA var_to_replace)
+    var_to_replace->virtual_address += offset; //might be 0.
+
 
     //   - print virtual memory address 
-    printf("%d\n", var_to_replace->virtual_address);
+    if(printBool){
+        printf("%d\n", var_to_replace->virtual_address);
+    }
     /*
      how can we NOT have address print out for createVariable() calls of allocateVariable()?
 
@@ -251,9 +279,9 @@ void freeVariable(uint32_t pid, std::string var_name, Mmu *mmu, PageTable *page_
 {
     //   - remove entry from MMU
     // Change the variable name and type to represent free space
-    printf("flag");
+    printf("flag"); 
     Variable *var = mmu->getVar(pid, var_name);
-    var->name = (std::string)"<FREE_SPACE>";
+    var->name = "<FREE_SPACE>";
     var->type = FreeSpace;
     // Check if either the variable just before it and/or just after it are also free space - if so merge them into one larger free space
     printf("flag2");
@@ -295,4 +323,17 @@ DataType convertStringToDatatype(std::string input){
         printf("failure in convertStringToDataType() in main.cpp\n");
     }
     return type;
+}
+
+uint32_t findOffset(uint32_t address, uint32_t element_size, uint32_t num_elements, uint32_t page_size){
+    for(int i = 0; i < num_elements; i++){
+        int element_address = (i * element_size) + address;
+        for(int j = 1; j < element_size; j++){
+            int temp = element_address + j;
+            if(temp % page_size == 0){
+                return j;
+            }
+        }
+    }
+    return 0;
 }
